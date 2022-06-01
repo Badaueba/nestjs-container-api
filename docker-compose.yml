@@ -3,7 +3,7 @@ version: "3.5"
 services:
     api:
         build: ./api
-        image: node:14
+        image: node:16:alpine
         working_dir: /api
         restart: always
         container_name: api
