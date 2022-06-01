@@ -9,6 +9,8 @@ import {
 	Put,
 	Delete,
 	UseFilters,
+	ClassSerializerInterceptor,
+	UseInterceptors,
 } from '@nestjs/common';
 import {
 	ApiBearerAuth,
@@ -31,6 +33,7 @@ import { User } from './user.entity';
 @Controller('users')
 @UseGuards(JwtGuard)
 @UseFilters(HttpExceptionFilter)
+@UseInterceptors(ClassSerializerInterceptor)
 export class UserController {
 	constructor(private userService: UserService) {}
 

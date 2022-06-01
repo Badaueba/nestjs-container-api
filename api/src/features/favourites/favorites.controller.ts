@@ -1,13 +1,14 @@
 import {
 	Body,
+	ClassSerializerInterceptor,
 	Controller,
 	Delete,
 	Get,
 	Param,
 	Post,
-	Put,
 	UseFilters,
 	UseGuards,
+	UseInterceptors,
 } from '@nestjs/common';
 import {
 	ApiBearerAuth,
@@ -22,7 +23,6 @@ import { UUIDParamDto } from 'src/shared/ParamDto';
 import { JwtGuard } from '../auth/guards/auth-jwt.guard';
 import { FavoriteDto } from '../products/dto/favorite.dto';
 import { FavoriteProducts } from '../products/favorite-products.entity';
-
 import { CreateListDto } from './dto/create-list.dto';
 import { FavoriteList } from './favorite.entity';
 import { FavoritesService } from './favorites.service';
@@ -31,6 +31,7 @@ import { FavoritesService } from './favorites.service';
 @ApiBearerAuth('JWT')
 @UseGuards(JwtGuard)
 @UseFilters(HttpExceptionFilter)
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('favourites')
 export class FavoritesController {
 	constructor(private favoritesService: FavoritesService) {}

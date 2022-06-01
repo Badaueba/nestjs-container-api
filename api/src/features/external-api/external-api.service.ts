@@ -1,11 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { ExternalProductsList } from '../schemas/external-products-list';
-import { ExternalProduct } from '../schemas/external-product';
 import { map, lastValueFrom } from 'rxjs';
 import * as AxiosLogger from 'axios-logger';
 import { AxiosError } from 'axios';
-import { ExternalListParams } from '../dto/list-params.dto';
+import { ExternalListParams } from './dto/list-params.dto';
+import { ExternalProductsList } from './schemas/external-products-list';
+import { ExternalProduct } from './schemas/external-product';
 
 @Injectable()
 export class ExternalApiService {

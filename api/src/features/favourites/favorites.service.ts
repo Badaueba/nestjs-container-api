@@ -1,28 +1,27 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { response } from 'express';
 import { repositoryError } from 'src/shared/handle-error';
-import { ExternalProduct } from '../external-api/schemas/external-product';
+import { Repository } from 'typeorm';
 import { FavoriteDto } from '../products/dto/favorite.dto';
 import { ProductsService } from '../products/products.service';
 import { UserService } from '../user/user.service';
 import { CreateListDto } from './dto/create-list.dto';
 import { FavoriteList } from './favorite.entity';
-import { FavoriteListRepository } from './favorite.repository';
+
 import { FullFavoriteList } from './schemas/full-favorite-list';
 
 @Injectable()
 export class FavoritesService {
 	constructor(
-		@InjectRepository(FavoriteListRepository)
-		private readonly favoriteRepository: FavoriteListRepository,
+		@InjectRepository(FavoriteList)
+		private readonly favoriteRepository: Repository<FavoriteList>,
 		private userService: UserService,
 		private productsService: ProductsService,
 	) {}
 
 	public async listAll(): Promise<FavoriteList[]> {
 		try {
-			return this.favoriteRepository.listAllLists();
+			return this.favoriteRepository.find();
 		} catch (error) {
 			repositoryError(error);
 		}
@@ -30,10 +29,13 @@ export class FavoritesService {
 
 	public async listDetailed(id: string): Promise<FullFavoriteList> {
 		try {
-			const list = await this.favoriteRepository.findByID(id);
+			const list = await this.favoriteRepository.findOneBy({ id });
 
 			if (!list)
-				throw new HttpException('List not found', HttpStatus.NOT_FOUND);
+				throw new HttpException(
+					'List was not found',
+					HttpStatus.NOT_FOUND,
+				);
 
 			const favoriteProducts =
 				await this.productsService.getFavoriteProducts(list.id);
@@ -50,9 +52,9 @@ export class FavoritesService {
 
 	public async create(data: CreateListDto): Promise<FavoriteList> {
 		try {
-			const alreadyExists = await this.favoriteRepository.findByUser(
-				data.user,
-			);
+			const alreadyExists = await this.favoriteRepository.findOne({
+				where: { user: { id: data.user } },
+			});
 			if (alreadyExists)
 				throw new HttpException(
 					'User Already has a favorite list',
@@ -65,7 +67,7 @@ export class FavoritesService {
 				user,
 			});
 
-			const favoriteList = await this.favoriteRepository.createList(
+			const favoriteList = await this.favoriteRepository.save(
 				favoriteEntity,
 			);
 
@@ -83,7 +85,8 @@ export class FavoritesService {
 	}
 	public async deleteList(id: string) {
 		try {
-			return this.favoriteRepository.deleteList(id);
+			const result = await this.favoriteRepository.delete(id);
+			return result.affected > 0 ? true : false;
 		} catch (error) {
 			repositoryError(error);
 		}

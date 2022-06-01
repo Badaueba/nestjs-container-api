@@ -1,4 +1,4 @@
-FROM node:16:alpine
+FROM node:16.15.0
 
 WORKDIR /api
 
@@ -6,8 +6,8 @@ WORKDIR /api
 # RUN yarn install
 COPY ./package*.json ./
 
-RUN npm install
+RUN yarn install
 
 COPY . .
 
-CMD [ "npm", "start:dev" ]
+CMD [ "yarn", "start:dev" ]

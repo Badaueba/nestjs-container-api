@@ -1,23 +1,44 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user-dto';
 import { SigninUserDTO } from './dto/signin-user-dto';
-
 import { InjectRepository } from '@nestjs/typeorm';
 import { repositoryError } from 'src/shared/handle-error';
-import { UserRepository } from './typeorm-user.repository';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class UserService {
 	constructor(
-		@InjectRepository(UserRepository)
-		private readonly userRepository: UserRepository,
+		@InjectRepository(User)
+		private readonly userRepository: Repository<User>,
 	) {}
+
+	protected async findByEmail(email: string) {
+		try {
+			return this.userRepository.findOne({
+				where: { email },
+			});
+		} catch (e) {
+			repositoryError(e);
+		}
+	}
+
+	async findById(id: string): Promise<User> {
+		try {
+			const user = await this.userRepository.findOne({
+				where: { id },
+			});
+			if (!user)
+				throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+			return user;
+		} catch (e) {
+			repositoryError(e);
+		}
+	}
 
 	public async showUser(data: SigninUserDTO) {
 		try {
-			const user = await this.userRepository.findByEmail(data.email);
+			const user = await this.findByEmail(data.email);
 
 			if (!user)
 				throw new HttpException('User not found', HttpStatus.NOT_FOUND);
@@ -35,17 +56,6 @@ export class UserService {
 		}
 	}
 
-	public async findById(id: string): Promise<User> {
-		try {
-			const user = await this.userRepository.findOne({ id });
-			if (!user)
-				throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-			return user;
-		} catch (e) {
-			repositoryError(e);
-		}
-	}
-
 	async showAll(): Promise<User[]> {
 		try {
 			const users = await this.userRepository.find();
@@ -57,9 +67,7 @@ export class UserService {
 
 	async create(data: CreateUserDto): Promise<User> {
 		try {
-			const alreadyExists = await this.userRepository.findByEmail(
-				data.email,
-			);
+			const alreadyExists = await this.findByEmail(data.email);
 			if (alreadyExists)
 				throw new HttpException(
 					'User Already Exists',
@@ -67,7 +75,7 @@ export class UserService {
 				);
 
 			const userEntity = new User(data);
-			const user = await this.userRepository.signup(userEntity);
+			const user = await this.userRepository.save(userEntity);
 			return user;
 		} catch (e) {
 			repositoryError(e);

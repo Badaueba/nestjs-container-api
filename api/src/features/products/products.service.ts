@@ -1,19 +1,18 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-
 import { repositoryError } from 'src/shared/handle-error';
+import { Repository } from 'typeorm';
 import { ExternalListParams } from '../external-api/dto/list-params.dto';
-import { ExternalApiService } from '../external-api/providers/external-api.service';
+import { ExternalApiService } from '../external-api/external-api.service';
 import { FavoriteDto } from './dto/favorite.dto';
 import { FavoriteProducts } from './favorite-products.entity';
-import { ProductRespository } from './product.repository';
 
 @Injectable()
 export class ProductsService {
 	constructor(
 		private externalService: ExternalApiService,
-		@InjectRepository(ProductRespository)
-		private readonly productRepository: ProductRespository,
+		@InjectRepository(FavoriteProducts)
+		private readonly productRepository: Repository<FavoriteProducts>,
 	) {}
 
 	public async importList(params?: ExternalListParams) {
@@ -36,19 +35,26 @@ export class ProductsService {
 
 	public async checkFavorite(data: FavoriteDto) {
 		try {
-			return this.productRepository.checkFavorite(
-				data.product,
-				data.list,
-			);
+			const favorite = await this.productRepository
+				.createQueryBuilder('favorites')
+				.where('favorites.listId = :list', { list: data.list })
+				.andWhere('favorites.product = :product', {
+					product: data.product,
+				})
+				.getOne();
+
+			return favorite;
 		} catch (e) {
 			repositoryError(e);
 		}
 	}
 
-	public async getFavoriteProducts(favoriteList: string) {
+	public async getFavoriteProducts(list: string) {
 		try {
-			const favorites: FavoriteProducts[] =
-				await this.productRepository.getFavoriteProducts(favoriteList);
+			const favorites: FavoriteProducts[] = await this.productRepository
+				.createQueryBuilder('favorites')
+				.where('favorites.listId = :list', { list })
+				.getMany();
 
 			return this.importMany(favorites);
 		} catch (e) {
@@ -77,7 +83,10 @@ export class ProductsService {
 			favorite.product = data.product;
 			favorite.list = data.list;
 
-			return this.productRepository.makeFavorite(favorite);
+			return this.productRepository.save({
+				list: favorite.list,
+				product: favorite.product,
+			});
 		} catch (e) {
 			repositoryError(e);
 		}
@@ -85,10 +94,11 @@ export class ProductsService {
 
 	public async removeFavorite(data: FavoriteDto) {
 		try {
-			return this.productRepository.deleteFavorite(
-				data.product,
-				data.list,
-			);
+			const result = await this.productRepository.delete({
+				list: data.list,
+				product: data.product,
+			});
+			return result.affected > 0 ? true : false;
 		} catch (e) {
 			repositoryError(e);
 		}

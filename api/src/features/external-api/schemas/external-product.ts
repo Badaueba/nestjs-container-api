@@ -12,5 +12,5 @@ export class ExternalProduct {
 	@ApiProperty()
 	title: string;
 	@ApiProperty()
-	reviewScore: string;
+	reviewScore: number;
 }

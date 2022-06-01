@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ExternalApiService } from './providers/external-api.service';
 import { HttpModule } from '@nestjs/axios';
+import { ExternalApiService } from './external-api.service';
 
 @Module({
 	providers: [ExternalApiService],
