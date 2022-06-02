@@ -1,7 +1,8 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { join } from 'path';
+import { DataSource, DataSourceOptions } from 'typeorm';
 
-const typeormConfig: TypeOrmModuleOptions = {
+export const typeormConfig: TypeOrmModuleOptions = {
 	name: 'default',
 	type: 'mysql',
 	host: process.env.MYSQL_HOST,
@@ -12,8 +13,8 @@ const typeormConfig: TypeOrmModuleOptions = {
 	entities: [join(__dirname, '../**/*.entity{.ts,.js}')],
 	migrations: [join(__dirname, '../migrations/*{.ts, .js}')],
 	synchronize: false,
-	migrationsRun: true,
-	retryAttempts: 3,
 };
 
-export = typeormConfig;
+export const mysqlDataSource = new DataSource(
+	typeormConfig as DataSourceOptions,
+);
