@@ -6,10 +6,19 @@
 
 ## Dependencies:
 
+-   Node >=16.0.0
 -   Docker version 20.10.11
 -   Docker-compose version 1.29.0
 
 ## Run:
+
+-   install api dependencies:
+
+```
+cd ./api
+yarn install
+
+```
 
 -   initialize api, mysql and php-myadmin containers with docker-compose:
 
